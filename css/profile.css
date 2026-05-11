@@ -13,6 +13,7 @@ body {
 
 .navbar {
   backdrop-filter: blur(10px);
+  background: var(--primary-gradient) !important;
 }
 
 .navbar-brand {
