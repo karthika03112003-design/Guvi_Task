@@ -1,110 +1,322 @@
-# GUVI Internship Task (Register → Login → Profile)
+# GUVI Internship Task - User Authentication System
 
-## Folder structure (matches your screenshot)
+A complete user authentication system with registration, login, and profile management using MongoDB Atlas, Aiven MySQL, Redis, and PHP.
+
+## Features
+
+- **User Registration** - Create account with name, email, password
+- **User Login** - Authenticate with email/password, receive token
+- **Profile Management** - Update age, DOB, contact, address
+- **Session Management** - Token-based auth via Redis with auto-expiry
+- **Responsive UI** - Modern design with Bootstrap 5, works on all devices
+
+## Tech Stack
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| Frontend | HTML, CSS, JavaScript, Bootstrap 5, jQuery | Responsive UI |
+| Backend | PHP 8.5 (Homebrew) | Server-side logic |
+| User Data | MongoDB Atlas (Cloud) | Stores name, email, password_hash |
+| Profile Data | Aiven MySQL (Cloud) | Stores age, dob, contact, address |
+| Session | Redis (Local) | Stores auth tokens with TTL |
+| Auth | Token-based (localStorage) | No PHP sessions |
+
+## Folder Structure
 
 ```
-assets/
-css/
-  style.css
-js/
-  login.js
-  profile.js
-  register.js
-php/
-  login.php
-  profile.php
-  register.php
-index.html
-login.html
-profile.html
-register.html
-schema.sql
+Guvi-Task/
+├── .env                    # Database credentials (not in git)
+├── composer.json           # PHP dependencies
+├── schema.sql              # MySQL table schema
+├── index.html              # Landing page
+├── register.html           # Registration page
+├── login.html              # Login page
+├── profile.html            # Profile page
+├── css/
+│   ├── index.css           # Landing page styles
+│   ├── register.css        # Registration styles
+│   ├── login.css           # Login styles
+│   └── profile.css         # Profile styles
+├── js/
+│   ├── register.js         # Registration form handler
+│   ├── login.js            # Login form handler
+│   └── profile.js          # Profile form handler
+└── php/
+    ├── config.php          # Environment loader
+    ├── register.php        # Registration endpoint
+    ├── login.php           # Login endpoint
+    ├── profile.php         # Profile endpoint
+    └── db/
+        ├── mongo.php       # MongoDB Atlas connection
+        ├── mysql.php       # Aiven MySQL connection (SSL)
+        └── redis.php       # Redis connection
 ```
 
-## Tech used (as required by PDF)
+## Architecture
 
-- **HTML/CSS/JS/PHP**: Separate files (no mixing)
-- **Bootstrap**: Responsive forms
-- **jQuery AJAX**: Only way the frontend talks to backend (no form submit)
-- **MongoDB**: Stores registration data (name/email/password_hash)
-- **MySQL**: Stores profile details (age/dob/contact/address)
-- **Redis**: Stores backend session (token → user_id)
-- **Browser localStorage**: Stores only the token (no PHP sessions)
-
-## Step-by-step: How to run (Windows)
-
-### 1) Install required services
-
-- **MySQL** (server running)
-- **MongoDB** (server running)
-- **Redis** (server running)
-- **PHP 8+**
-- **Composer**
-
-### 2) Create the MySQL table
-
-Open a MySQL client (MySQL Workbench / CLI) and run:
-
-```sql
-SOURCE schema.sql;
+```
+┌─────────────┐    AJAX/JSON    ┌─────────────┐
+│   Browser   │ ◄─────────────► │   PHP API   │
+│ (localStorage)│               │             │
+└─────────────┘                 └──────┬──────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    ▼                  ▼                  ▼
+            ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+            │  MongoDB    │    │    MySQL    │    │    Redis    │
+            │   Atlas     │    │   (Aiven)   │    │   (Local)   │
+            │             │    │             │    │             │
+            │ users col.  │    │user_profiles│    │   tokens    │
+            └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-This creates database `guvi_task` and table `user_profiles`.
+## Data Flow
 
-### 3) Install PHP MongoDB library
+### Registration
+1. User submits name, email, password
+2. Password hashed with `password_hash()`
+3. User document created in MongoDB (`users` collection)
+4. Profile row created in MySQL (`user_profiles` table)
+5. Redirect to login
 
-In the project root (`D:\KARTHIKA\Guvi-Task`) run:
+### Login
+1. User submits email, password
+2. Find user in MongoDB by email
+3. Verify password with `password_verify()`
+4. Generate random token, store in Redis with 1-hour TTL
+5. Return token to client, store in localStorage
+
+### Profile Access
+1. Client sends token in request
+2. Server validates token in Redis
+3. Fetch user from MongoDB, profile from MySQL
+4. Return combined data to client
+
+### Logout
+1. Delete token from Redis
+2. Clear localStorage
+3. Redirect to login
+
+## Prerequisites
+
+- **PHP 8.2+** with extensions: `mysqli`, `mongodb`, `redis`
+- **Composer** for PHP dependencies
+- **Redis** server running locally
+- **MongoDB Atlas** account (cloud)
+- **Aiven MySQL** account (cloud)
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone <repo-url>
+cd Guvi-Task
+```
+
+### 2. Install PHP dependencies
 
 ```bash
 composer install
 ```
 
-### 4) Enable PHP extensions
+### 3. Create `.env` file
 
-Make sure these are enabled in your `php.ini`:
+```env
+# MongoDB Atlas
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/?tlsAllowInvalidCertificates=true
+MONGO_DB=guvi_task
 
-- `extension=mysqli`
-- `extension=mongodb`  (MongoDB driver)
-- `extension=redis`    (phpredis)
+# Aiven MySQL
+MYSQL_HOST=mysql-host.aivencloud.com
+MYSQL_PORT=23120
+MYSQL_USER=avnadmin
+MYSQL_PASSWORD=your-password
+MYSQL_DB=defaultdb
 
-Restart any PHP/Apache service after enabling extensions.
-
-### 5) Configure DB/Redis connection settings (if needed)
-
-If your local credentials differ, edit these files:
-
-- `php/register.php` (MongoDB + MySQL)
-- `php/login.php` (MongoDB + Redis)
-- `php/profile.php` (MongoDB + MySQL + Redis)
-
-Look for the section:
-`// ---- Configuration (edit these to match your local setup) ----`
-
-### 6) Start the PHP server
-
-From the project root:
-
-```bash
-php -S 127.0.0.1:8000
+# Redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 ```
 
-### 7) Open the app
+### 4. Create MySQL table
 
-In your browser open:
+Connect to Aiven MySQL and run:
 
-- `http://127.0.0.1:8000/index.html`
+```sql
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mongo_id VARCHAR(24) NOT NULL UNIQUE,
+    age INT,
+    dob DATE,
+    contact VARCHAR(20),
+    address TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_mongo_id (mongo_id)
+);
+```
 
-### 8) Test the required flow
+### 5. Configure MongoDB Atlas
 
-- Go to **Register**, create an account
-- Go to **Login**, login with the same credentials
-- You’ll be redirected to **Profile**
-- Update age/dob/contact/address and save
-- Logout clears localStorage token and deletes session from Redis
+1. Go to MongoDB Atlas Dashboard
+2. Navigate to **Network Access**
+3. Add IP: `0.0.0.0/0` (Allow Access from Anywhere) or your specific IP
 
-## Notes for the evaluator
+### 6. Start Redis (macOS)
 
-- **No form submission** is used (`type="button"` + jQuery AJAX).
-- **MySQL uses prepared statements only** (`prepare()` + `bind_param()`).
-- **No PHP sessions** are used; session is **token in localStorage**, validated via **Redis**.
+```bash
+brew services start redis
+```
 
+### 7. Start PHP server
+
+```bash
+cd /Applications/XAMPP/xamppfiles/htdocs/Guvi-Task
+php -S localhost:8000
+```
+
+### 8. Access the application
+
+Open browser: `http://localhost:8000`
+
+## API Endpoints
+
+### POST `/php/register.php`
+
+Register a new user.
+
+**Request:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "message": "Registration successful"
+}
+```
+
+### POST `/php/login.php`
+
+Login and receive auth token.
+
+**Request:**
+```json
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "token": "abc123...",
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+```
+
+### POST `/php/profile.php`
+
+Get or update profile. Requires `token` in all requests.
+
+**Get Profile:**
+```json
+{
+  "action": "get",
+  "token": "abc123..."
+}
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "profile": {
+    "age": 25,
+    "dob": "1999-01-15",
+    "contact": "+91-9876543210",
+    "address": "Chennai, India"
+  }
+}
+```
+
+**Update Profile:**
+```json
+{
+  "action": "update",
+  "token": "abc123...",
+  "name": "John Doe",
+  "age": 26,
+  "dob": "1999-01-15",
+  "contact": "+91-9876543210",
+  "address": "Updated address"
+}
+```
+
+**Logout:**
+```json
+{
+  "action": "logout",
+  "token": "abc123..."
+}
+```
+
+## Security Features
+
+- Passwords hashed with `password_hash()` (bcrypt)
+- Prepared statements for all MySQL queries
+- Token-based authentication (no session fixation)
+- Redis tokens auto-expire after 1 hour
+- Credentials stored in `.env` (excluded from git)
+- SSL/TLS for MongoDB Atlas and Aiven MySQL connections
+
+## UI Design
+
+- **Landing Page** - Hero section, feature cards, tech stack display, data flow diagram
+- **Register/Login** - Split-card design with gradient visual panel, floating labels, icons
+- **Profile** - Header card with avatar, session badge, organized form sections
+
+## Development Notes
+
+- Uses Homebrew PHP 8.5 instead of XAMPP PHP (XAMPP's OpenSSL 1.1.1 incompatible with MongoDB Atlas TLS)
+- All AJAX requests send JSON body (not form-urlencoded)
+- MongoDB stores user credentials, MySQL stores extended profile
+- Redis provides fast token lookup with automatic expiration
+
+## Troubleshooting
+
+### MongoDB Connection Error
+- Check IP whitelist in Atlas Dashboard
+- Verify connection string in `.env`
+- Ensure `mongodb` PHP extension is enabled
+
+### MySQL Connection Error
+- Verify Aiven service is running
+- Check SSL certificate configuration
+- Confirm port 23120 (not default 3306)
+
+### Redis Connection Error
+```bash
+redis-cli ping  # Should return PONG
+```
+
+### PHP Extensions
+```bash
+php -m | grep -E 'mysqli|mongodb|redis'
+```
+
+## License
+
+This project is for educational purposes as part of the GUVI Internship Task.
