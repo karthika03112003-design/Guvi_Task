@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
 RUN apt-get update && apt-get install -y \
     libssl-dev \
@@ -13,11 +13,9 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 RUN pecl install mongodb-1.21.0 redis \
     && docker-php-ext-enable mongodb redis
 
-RUN a2enmod rewrite
-
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /app
 
 COPY composer.json composer.lock ./
 
@@ -25,12 +23,6 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 COPY . .
 
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
-    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
-    && ln -sf /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load
+EXPOSE 8080
 
-RUN chown -R www-data:www-data /var/www/html
-
-EXPOSE 80
-
-CMD ["apache2-foreground"]
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t /app"]
