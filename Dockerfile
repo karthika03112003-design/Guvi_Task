@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-RUN pecl install mongodb redis \
+RUN pecl install mongodb-1.21.0 redis \
     && docker-php-ext-enable mongodb redis
 
 RUN a2enmod rewrite
