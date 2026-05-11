@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register - GUVI Task</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="./css/register.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="./index.html">
+          <i class="bi bi-shield-lock me-2"></i>GUVI Task
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="./index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./login.html">Login</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="auth-section">
+      <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100-minus-nav">
+          <div class="col-lg-10 col-xl-8">
+            <div class="auth-card">
+              <div class="row g-0">
+                <!-- Left Side - Visual -->
+                <div class="col-lg-5 d-none d-lg-block">
+                  <div class="auth-visual">
+                    <div class="visual-content">
+                      <i class="bi bi-person-plus-fill visual-icon"></i>
+                      <h4>Join Us Today</h4>
+                      <p>Create your account and start managing your profile securely.</p>
+                      <div class="tech-badges">
+                        <span class="badge"><i class="bi bi-leaf"></i> MongoDB</span>
+                        <span class="badge"><i class="bi bi-bolt"></i> Redis</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Right Side - Form -->
+                <div class="col-lg-7">
+                  <div class="auth-form-wrapper">
+                    <div class="form-header">
+                      <h2>Create Account</h2>
+                      <p class="text-muted">Enter your details to register</p>
+                    </div>
+
+                    <div id="alertBox" class="alert d-none" role="alert"></div>
+
+                    <form id="registerForm" autocomplete="off">
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="name" placeholder="Full Name" required />
+                        <label for="name"><i class="bi bi-person me-2"></i>Full Name</label>
+                      </div>
+                      <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="email" placeholder="Email Address" required />
+                        <label for="email"><i class="bi bi-envelope me-2"></i>Email Address</label>
+                      </div>
+                      <div class="form-floating mb-4">
+                        <input type="password" class="form-control" id="password" placeholder="Password" required />
+                        <label for="password"><i class="bi bi-lock me-2"></i>Password</label>
+                        <div class="password-hint">Minimum 8 characters</div>
+                      </div>
+
+                      <button id="registerBtn" type="button" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-person-plus me-2"></i>Create Account
+                      </button>
+                    </form>
+
+                    <div class="form-footer">
+                      <p>Already have an account? <a href="./login.html">Login here</a></p>
+                    </div>
+
+                    <div class="security-note">
+                      <i class="bi bi-shield-check"></i>
+                      <small>Your password is securely hashed using bcrypt</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="./js/register.js"></script>
+  </body>
+</html>

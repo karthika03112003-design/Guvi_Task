@@ -1,0 +1,8 @@
+{
+  "name": "guvi/task",
+  "description": "GUVI Internship Task: Register/Login/Profile with MongoDB, MySQL, Redis",
+  "require": {
+    "mongodb/mongodb": "^1.20"
+  }
+}
+
