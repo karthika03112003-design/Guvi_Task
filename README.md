@@ -16,8 +16,8 @@ A complete user authentication system with registration, login, and profile mana
 |-----------|------------|---------|
 | Frontend | HTML, CSS, JavaScript, Bootstrap 5, jQuery | Responsive UI |
 | Backend | PHP 8.5 (Homebrew) | Server-side logic |
-| User Data | MongoDB Atlas (Cloud) | Stores name, email, password_hash |
-| Profile Data | Aiven MySQL (Cloud) | Stores age, dob, contact, address |
+| User Data | Aiven MySQL (Cloud) | Stores id, hash, email, password, createdAt |
+| Profile Data | MongoDB Atlas (Cloud) | Stores userId, age, dob, address, phone |
 | Session | Upstash Redis (Cloud) | Stores auth tokens with TTL |
 | Auth | Token-based (localStorage) | No PHP sessions |
 
@@ -66,7 +66,7 @@ Guvi-Task/
             │  MongoDB    │    │    MySQL    │    │    Redis    │
             │   Atlas     │    │   (Aiven)   │    │  (Upstash)  │
             │             │    │             │    │             │
-            │ users col.  │    │user_profiles│    │   tokens    │
+            │ user_profiles│   │   users     │    │   tokens    │
             └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
@@ -74,23 +74,27 @@ Guvi-Task/
 
 ### Registration
 1. User submits name, email, password
-2. Password hashed with `password_hash()`
-3. User document created in MongoDB (`users` collection)
-4. Profile row created in MySQL (`user_profiles` table)
-5. Redirect to login
+2. Password hashed with `sha512`
+3. User record created in MySQL (`users` table) - stores id, hash, email, password, createdAt
+4. Redirect to login
 
 ### Login
 1. User submits email, password
-2. Find user in MongoDB by email
-3. Verify password with `password_verify()`
-4. Generate random token, store in Redis with 1-hour TTL
+2. Find user in MySQL by email
+3. Verify password with `hash_equals` (sha512)
+4. Generate random token, store session in Upstash Redis with 24-hour TTL
 5. Return token to client, store in localStorage
 
 ### Profile Access
 1. Client sends token in request
-2. Server validates token in Redis
-3. Fetch user from MongoDB, profile from MySQL
+2. Server validates token in Upstash Redis
+3. Fetch user from MySQL, profile from MongoDB
 4. Return combined data to client
+
+### Profile Update
+1. Client sends updated profile data with token
+2. Server validates token in Upstash Redis
+3. Upsert profile document in MongoDB (`user_profiles` collection) - stores userId, age, dob, address, phone
 
 ### Logout
 1. Delete token from Redis
@@ -143,16 +147,15 @@ REDIS_URL=rediss://default:your-password@your-instance.upstash.io:6379
 Connect to Aiven MySQL and run:
 
 ```sql
-CREATE TABLE IF NOT EXISTS user_profiles (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    mongo_id VARCHAR(24) NOT NULL UNIQUE,
-    age INT,
-    dob DATE,
-    contact VARCHAR(20),
-    address TEXT,
+    hash VARCHAR(128) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_mongo_id (mongo_id)
+    INDEX idx_email (email),
+    INDEX idx_hash (hash)
 );
 ```
 
@@ -268,10 +271,10 @@ Get or update profile. Requires `token` in all requests.
 
 ## Security Features
 
-- Passwords hashed with `password_hash()` (bcrypt)
+- Passwords hashed with `sha512`
 - Prepared statements for all MySQL queries
 - Token-based authentication (no session fixation)
-- Redis tokens auto-expire after 1 hour
+- Upstash Redis tokens auto-expire after 24 hours
 - Credentials stored in `.env` (excluded from git)
 - SSL/TLS for MongoDB Atlas, Aiven MySQL, and Upstash Redis connections
 
@@ -285,7 +288,7 @@ Get or update profile. Requires `token` in all requests.
 
 - Uses Homebrew PHP 8.5 instead of XAMPP PHP (XAMPP's OpenSSL 1.1.1 incompatible with MongoDB Atlas TLS)
 - All AJAX requests send JSON body (not form-urlencoded)
-- MongoDB stores user credentials, MySQL stores extended profile
+- MySQL stores user credentials (id, hash, email, password), MongoDB stores profile data (userId, age, dob, address, phone)
 - Upstash Redis provides fast token lookup with automatic expiration (TLS enabled)
 
 ## Troubleshooting
