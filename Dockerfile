@@ -1,5 +1,7 @@
 FROM php:8.2-apache
 
+RUN a2dismod mpm_event mpm_worker || true && a2enmod mpm_prefork
+
 RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
