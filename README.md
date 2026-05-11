@@ -1,13 +1,13 @@
 # GUVI Internship Task - User Authentication System
 
-A complete user authentication system with registration, login, and profile management using MongoDB Atlas, Aiven MySQL, Redis, and PHP.
+A complete user authentication system with registration, login, and profile management using MongoDB Atlas, Aiven MySQL, Upstash Redis, and PHP.
 
 ## Features
 
 - **User Registration** - Create account with name, email, password
 - **User Login** - Authenticate with email/password, receive token
 - **Profile Management** - Update age, DOB, contact, address
-- **Session Management** - Token-based auth via Redis with auto-expiry
+- **Session Management** - Token-based auth via Upstash Redis with auto-expiry
 - **Responsive UI** - Modern design with Bootstrap 5, works on all devices
 
 ## Tech Stack
@@ -18,7 +18,7 @@ A complete user authentication system with registration, login, and profile mana
 | Backend | PHP 8.5 (Homebrew) | Server-side logic |
 | User Data | MongoDB Atlas (Cloud) | Stores name, email, password_hash |
 | Profile Data | Aiven MySQL (Cloud) | Stores age, dob, contact, address |
-| Session | Redis (Local) | Stores auth tokens with TTL |
+| Session | Upstash Redis (Cloud) | Stores auth tokens with TTL |
 | Auth | Token-based (localStorage) | No PHP sessions |
 
 ## Folder Structure
@@ -49,7 +49,7 @@ Guvi-Task/
     └── db/
         ├── mongo.php       # MongoDB Atlas connection
         ├── mysql.php       # Aiven MySQL connection (SSL)
-        └── redis.php       # Redis connection
+        └── redis.php       # Upstash Redis connection (TLS)
 ```
 
 ## Architecture
@@ -64,7 +64,7 @@ Guvi-Task/
                     ▼                  ▼                  ▼
             ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
             │  MongoDB    │    │    MySQL    │    │    Redis    │
-            │   Atlas     │    │   (Aiven)   │    │   (Local)   │
+            │   Atlas     │    │   (Aiven)   │    │  (Upstash)  │
             │             │    │             │    │             │
             │ users col.  │    │user_profiles│    │   tokens    │
             └─────────────┘    └─────────────┘    └─────────────┘
@@ -101,7 +101,7 @@ Guvi-Task/
 
 - **PHP 8.2+** with extensions: `mysqli`, `mongodb`, `redis`
 - **Composer** for PHP dependencies
-- **Redis** server running locally
+- **Upstash Redis** account (cloud)
 - **MongoDB Atlas** account (cloud)
 - **Aiven MySQL** account (cloud)
 
@@ -134,9 +134,8 @@ MYSQL_USER=avnadmin
 MYSQL_PASSWORD=your-password
 MYSQL_DB=defaultdb
 
-# Redis
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
+# Upstash Redis
+REDIS_URL=rediss://default:your-password@your-instance.upstash.io:6379
 ```
 
 ### 4. Create MySQL table
@@ -163,20 +162,14 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 2. Navigate to **Network Access**
 3. Add IP: `0.0.0.0/0` (Allow Access from Anywhere) or your specific IP
 
-### 6. Start Redis (macOS)
-
-```bash
-brew services start redis
-```
-
-### 7. Start PHP server
+### 6. Start PHP server
 
 ```bash
 cd /Applications/XAMPP/xamppfiles/htdocs/Guvi-Task
 php -S localhost:8000
 ```
 
-### 8. Access the application
+### 7. Access the application
 
 Open browser: `http://localhost:8000`
 
@@ -280,7 +273,7 @@ Get or update profile. Requires `token` in all requests.
 - Token-based authentication (no session fixation)
 - Redis tokens auto-expire after 1 hour
 - Credentials stored in `.env` (excluded from git)
-- SSL/TLS for MongoDB Atlas and Aiven MySQL connections
+- SSL/TLS for MongoDB Atlas, Aiven MySQL, and Upstash Redis connections
 
 ## UI Design
 
@@ -293,7 +286,7 @@ Get or update profile. Requires `token` in all requests.
 - Uses Homebrew PHP 8.5 instead of XAMPP PHP (XAMPP's OpenSSL 1.1.1 incompatible with MongoDB Atlas TLS)
 - All AJAX requests send JSON body (not form-urlencoded)
 - MongoDB stores user credentials, MySQL stores extended profile
-- Redis provides fast token lookup with automatic expiration
+- Upstash Redis provides fast token lookup with automatic expiration (TLS enabled)
 
 ## Troubleshooting
 
@@ -307,10 +300,10 @@ Get or update profile. Requires `token` in all requests.
 - Check SSL certificate configuration
 - Confirm port 23120 (not default 3306)
 
-### Redis Connection Error
-```bash
-redis-cli ping  # Should return PONG
-```
+### Upstash Redis Connection Error
+- Verify `REDIS_URL` in `.env` matches Upstash dashboard
+- Ensure using `rediss://` scheme (TLS required)
+- Check Upstash service is active in dashboard
 
 ### PHP Extensions
 ```bash
